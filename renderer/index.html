@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SSH 管理器</title>
+  <link rel="stylesheet" href="../node_modules/@xterm/xterm/css/xterm.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ─── Title Bar (macOS drag region) ─── -->
+  <div id="titlebar">
+    <span class="titlebar-text">SSH 管理器</span>
+  </div>
+
+  <div id="app">
+    <!-- ─── Sidebar ─── -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <h2>服务器</h2>
+        <button id="btn-add" title="添加服务器">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      <ul id="server-list"></ul>
+      <div class="sidebar-footer">
+        <button id="btn-settings" title="外观设置">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>外观设置</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ─── Main Area ─── -->
+    <main id="main">
+      <!-- Tab Bar -->
+      <div id="tab-bar"></div>
+
+      <!-- Terminal Container (panels shown/hidden via JS) -->
+      <div id="terminal-container">
+        <!-- Welcome screen -->
+        <div id="welcome">
+          <div class="welcome-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#58a6ff"/><stop offset="100%" style="stop-color:#d2a8ff"/></linearGradient></defs>
+              <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
+            </svg>
+          </div>
+          <h1>SSH 管理器</h1>
+          <p>双击左侧服务器节点开始连接</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ─── Server Edit Modal ─── -->
+  <div id="modal-overlay" class="hidden">
+    <div id="modal">
+      <h3 id="modal-title">添加服务器</h3>
+      <form id="server-form">
+        <input type="hidden" id="f-id" />
+
+        <label for="f-name">名称</label>
+        <input id="f-name" required placeholder="我的服务器" />
+
+        <label for="f-host">主机 / IP</label>
+        <input id="f-host" required placeholder="192.168.1.100" />
+
+        <label for="f-port">端口</label>
+        <input id="f-port" type="number" value="22" min="1" max="65535" />
+
+        <label for="f-user">用户名</label>
+        <input id="f-user" required placeholder="root" />
+
+        <label for="f-auth">认证方式</label>
+        <select id="f-auth">
+          <option value="password">密码</option>
+          <option value="key">密钥</option>
+        </select>
+
+        <label for="f-pass" id="lbl-pass">密码</label>
+        <input id="f-pass" type="password" placeholder="••••••••" />
+
+        <label for="f-key" id="lbl-key" class="hidden">私钥 (粘贴内容)</label>
+        <textarea id="f-key" class="hidden" rows="4" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
+
+        <div class="modal-actions">
+          <button type="button" id="btn-cancel" class="btn-secondary">取消</button>
+          <button type="submit" class="btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ─── Settings Modal ─── -->
+  <div id="settings-overlay" class="hidden">
+    <div id="settings-modal">
+      <h3>外观设置</h3>
+
+      <div class="settings-section">
+        <label>预设主题</label>
+        <div id="theme-presets" class="theme-preset-grid"></div>
+      </div>
+
+      <div class="settings-section">
+        <label>字体大小</label>
+        <div class="settings-row">
+          <input id="s-fontsize" type="range" min="10" max="24" value="14" />
+          <span id="s-fontsize-val">14px</span>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <label>自定义颜色</label>
+        <div class="color-grid">
+          <div class="color-item">
+            <label for="s-bg">背景</label>
+            <input type="color" id="s-bg" value="#0d1117" />
+          </div>
+          <div class="color-item">
+            <label for="s-fg">文字</label>
+            <input type="color" id="s-fg" value="#e6edf3" />
+          </div>
+          <div class="color-item">
+            <label for="s-cursor">光标</label>
+            <input type="color" id="s-cursor" value="#58a6ff" />
+          </div>
+          <div class="color-item">
+            <label for="s-green">绿色</label>
+            <input type="color" id="s-green" value="#3fb950" />
+          </div>
+          <div class="color-item">
+            <label for="s-red">红色</label>
+            <input type="color" id="s-red" value="#ff7b72" />
+          </div>
+          <div class="color-item">
+            <label for="s-yellow">黄色</label>
+            <input type="color" id="s-yellow" value="#d29922" />
+          </div>
+          <div class="color-item">
+            <label for="s-blue">蓝色</label>
+            <input type="color" id="s-blue" value="#58a6ff" />
+          </div>
+          <div class="color-item">
+            <label for="s-magenta">紫色</label>
+            <input type="color" id="s-magenta" value="#d2a8ff" />
+          </div>
+          <div class="color-item">
+            <label for="s-cyan">青色</label>
+            <input type="color" id="s-cyan" value="#39d353" />
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" id="btn-settings-cancel" class="btn-secondary">取消</button>
+        <button type="button" id="btn-settings-save" class="btn-primary">应用</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../node_modules/@xterm/xterm/lib/xterm.js"></script>
+  <script src="../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="../node_modules/@xterm/addon-web-links/lib/addon-web-links.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+data/servers.json
+data/settings.json
+test-ssh.js
+.DS_Store
+*.log

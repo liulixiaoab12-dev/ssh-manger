@@ -1,0 +1,28 @@
+{
+  "name": "ssh-manager",
+  "version": "1.0.0",
+  "description": "类 XShell 的多服务器 SSH 管理桌面应用",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "keywords": [
+    "ssh",
+    "terminal",
+    "server-manager",
+    "xshell"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-web-links": "^0.12.0",
+    "@xterm/xterm": "^6.0.0",
+    "electron": "^41.2.2",
+    "ssh2": "^1.17.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.0.0"
+  }
+}
